@@ -49,7 +49,7 @@ function delay(timeout) { return new Promise(resolve => setTimeout(resolve, time
 
 ## Async Iteration
 
-`async function*` is an async generator. The mechanism they use internally is the `AsyncIterator` interface. By way of example, here is how the range function would be written as an `AsyncIterator` instead:
+`async function*` is an async generator. The mechanism they use internally is the `AsyncIterator` interface. The following code is how the range function would be written as an `AsyncIterator` instead:
 
 ```javascript
 function range(start, end) {
