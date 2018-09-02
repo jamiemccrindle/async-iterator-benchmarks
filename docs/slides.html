@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>My Awesome Presentation</title>
+    <title>Introduction to Async Iterators</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <style type="text/css">
       @import url(https://fonts.googleapis.com/css?family=Raleway);
@@ -20,11 +20,417 @@
 
 class: center, middle
 
-# Introduction to Async Iterators
+An introduction to
+# Async Iterators
+in JavaScript
+
+by Jamie McCrindle
+
+found at [jamie.mccrindle.org](https://jamie.mccrindle.org)
 ---
-# What's next???
+## Generators are great
+
+```javascript
+function* infiniteFibonacci() {
+  let [n1, n2] = [1, 1];
+  yield n1;
+  while (true) {
+    yield n2;
+    [n1, n2] = [n2, n1 + n2];
+  }
+}
+```
 ---
-# Something new!!!
+## But can they do this?
+
+```javascript
+const deferred = () => {
+  let resolve;
+  return { promise: new Promise(r => (resolve = r)), resolve };
+};
+
+export async function* sleepSort(values) {
+  // create an array of deferreds
+  let deferreds = Array.from(Array(values.length), deferred);
+  let index = 0;
+
+  for (const value of values) {
+    // delay for value * 500 millisconds and resolve them into the 
+    // deferreds in order
+    setTimeout(() => deferreds[index++].resolve(value), value * 500);
+  }
+
+  for (let i = 0; i &lt; values.length; i++) {
+    // return the values as they come in over time
+    yield await deferreds[i].promise;
+  }
+}
+```
+---
+## Building a rate watch
+
+```javascript
+// get the GBP / USD rate once a day
+async function* liveRates() {
+  while(true) {
+    // fetch the rates
+    const response =
+      await fetch('https://api.exchangeratesapi.io/latest?base=GBP');
+    // parse the json body
+    const json = await response.json();
+    // return the current GBPUSD exchange rate
+    yield json.rates.USD;
+    // pause for a day
+    await delay(24 * 60 * 60 * 1000);
+  }
+}
+// a function that pauses for a set amount of time
+function delay(timeout) { return new Promise(resolve => setTimeout(resolve, timeout)); }
+```
+
+---
+## Using the rate watch
+
+```javascript
+// go through the prices as they come in
+for await(const price of liveRates()) {
+  // insert brexit joke here
+  if(price &lt;= 1) {
+    console.log('yikes');
+    break;
+  }
+}
+```
+---
+# The 5 laws of AsyncIterators
+
+Async generators are built on top of the AsyncIterator interface
+
+- A method called: `[Symbol.asyncIterator]()`
+- `[Symbol.asyncIterator]()` returns an object with a `next()` method
+- next() returns a `Promise`
+- If this is the last value, the `Promise` should resolve to `{ done: true }`
+- Otherwise it should resolve to `{ value: value, done: false }` where value is the next value
+
+---
+## Live Rates Hard Mode
+
+```javascript
+function liveRatesHardMode() {
+  let firstTime = true;
+  return {
+    // async iterables have a method called [Symbol.asyncIterator]
+    [Symbol.asyncIterator]() {
+      return {
+        // [Symbol.asyncIterator] must return an object with a next method
+        async next() {
+          const response =
+            await fetch('https://api.exchangeratesapi.io/latest?base=GBP');
+          const json = await response.json();
+          // only delay after the first time
+          if (!firstTime)
+            await delay(5 * 1000);
+          else firstTime = false;
+          return { value: json.rates.USD, done: false };
+        }
+      };
+    }
+  };
+}
+```
+---
+## Turning a stream of events into an async iterable
+
+Async iterators make it possible to turn code that requires callbacks to one that has control flow that's easier to follow e.g.
+
+Instead of this syntax:
+
+```javascript
+lineReader.on("line", line => {
+  console.log(line);
+});
+lineReader.on("close", () => {
+  console.log("done");
+});
+```
+--
+We could use this instead:
+
+```javascript
+for await (const line of lines) {
+    console.log(line);
+}
+console.log('done');
+```
+---
+## Subjects
+It turns out that doing this generically is somewhat complicated because:
+
+- lineReader could send lines before the `for await` consumes them
+- lineReader may need to pause sending lines so that we don't run out of memory
+- `for await` could run before there are any lines available
+- the async iterator next method could be called directly multiple times without waiting for new lines
+
+Turns out we can borrow the concept of a `Subject` from RxJS.
+---
+## Using a Subject
+
+```javascript
+function fromLineReader(lineReader) {
+  const subject = new Subject();
+
+  // send a line to the subject
+  lineReader.on('line' => subject.onNext(line));
+  
+  // close the subject when the line reader closes
+  lineReader.on('close' => subject.onCompleted());
+  
+  // close the line reader when the subject closes
+  subject.finally(() => lineReader.close());
+
+  // return the async iterator
+  return subject.iterable;
+}
+```
+
+The [Axax](https://github.com/jamiemccrindle/axax) library has an implementation of `Subject` for async iterators.
+---
+## Cancellation and leaks
+
+```javascript
+// an async generator that never returns
+async function* neverEnds() {
+  await new Promise(() => {});
+}
+
+async function* asyncIterable() {
+  try {
+    // waits indefinitely for neverEnds()
+    for await (const item of neverEnds()) {
+      yield item;
+    }
+  } finally {
+    // never called
+    console.log("clean up resources");
+  }
+}
+
+const iter = asyncIterable();
+
+// doesn't do much as the iterable is stuck waiting for neverEnds()
+await iter.return();
+```
+---
+## Async Iterators vs RxJS
+
+### Control flow for async iterators
+
+```javascript
+
+console.log('starting');
+try {
+  for await (const item of source) {
+    console.log('in the loop');
+  }
+  console.log('succeeded');
+} catch(error) {
+  console.log('error');
+} finally {
+  console.log('done');
+}
+console.log('on to the next thing');
+```
+
+---
+## Async Iterators vs RxJS
+
+### Control flow for RxJS
+
+```javascript
+console.log("starting");
+const subscribe = source
+  .pipe(
+    finalize(() => {
+      console.log("done");
+      console.log("on to the next thing");
+    })
+  )
+  .subscribe(
+    item => console.log("in the loop"),
+    error => console.log("error"),
+    () => console.log("succeeded")
+  );
+```
+---
+## Performance vs RxJS
+
+Note:
+the implementations are not exactly equivalent but match how
+these problems would be idiomatically solved using each framework.
+
+In all of these benchmarks, the Rx default scheduler was used.
+
+| Property         | Value                 |
+| ---------------- | --------------------- |
+| Node             | 10.9.0                |
+| Hardware         | 2.7 GHz Intel Core i7 |
+| Operating System | Mac OS X              |
+---
+## reduce
+
+In this benchmark we implemented sum as a reduce over 1000 numbers.
+
+#### native
+
+```javascript
+async function sum(source) {
+  let accumulator = 0;
+  for await (const item of source) {
+    accumulator += item;
+  }
+  return accumulator;
+}
+```
+
+#### RxJS
+
+```javascript
+Rx.from(source)
+  .pipe(RxOperators.reduce((a, n) => a + n, 0))
+```
+---
+## reduce results
+
+| Implementation |         Ops Per Second\* |
+| -------------- | -----------------------: |
+| **RxJS**       | **15,912.45** per second |
+| AsyncIterators |      1,815.12 per second |
+
+\* higher is better
+---
+## map filter reduce
+
+In this case we combine a map, filter and a reduce over 1000 numbers.
+
+#### native
+
+```javascript
+async function mapFilterReduce(source) {
+  let accumulator = 0;
+  for await (const x of Native.from(array)) {
+    if (x % 2 === 0) {
+      accumulator = accumulator + x * 2;
+    }
+  }
+}
+```
+
+#### RxJS
+
+```javascript
+Rx.from(array, scheduler)
+  .pipe(
+    RxOperators.filter(x => x % 2 === 0),
+    RxOperators.map(x => x * 2),
+    RxOperators.reduce((a, n) => a + n, 0)
+  )
+```
+
+---
+## map filter reduce results
+
+| Implementation |         Ops Per Second\* |
+| -------------- | -----------------------: |
+| **RxJS**       | **10,599.15** per second |
+| AsyncIterators |      1,781.83 per second |
+
+\* higher is better
+
+---
+### concat map reduce
+
+In this case the source is an array of arrays of numbers that
+is 100x100.
+
+#### native
+
+```javascript
+async function concatMapReduce(source) {
+  let accumulator = 0;
+  for await (const outer of source) {
+    for await (const inner of from(outer)) {
+      accumulator = accumulator + inner;
+    }
+  }
+}
+```
+
+#### RxJS
+
+```javascript
+Rx.from(array, scheduler)
+  .pipe(
+    RxOperators.concatMap(value => Rx.from(value)),
+    RxOperators.reduce((a, n) => a + n, 0)
+  )
+```
+
+---
+## concatMap reduce results
+
+| Implementation |        Ops Per Second\* |
+| -------------- | ----------------------: |
+| **RxJS**       | **2,889.56** per second |
+| AsyncIterators |       182.97 per second |
+
+\* higher is better
+
+---
+## vs Most
+
+| Variation       | Implementation |         Ops Per Second\* |
+| --------------- | -------------- | -----------------------: |
+| reduce          | RxJS           |     15,912.45 per second |
+| reduce          | AsyncIterators |      1,815.12 per second |
+| reduce          | **Most**       | **66,560.13** per second |
+| mapFilterReduce | RxJS           |     10,599.15 per second |
+| mapFilterReduce | AsyncIterators |      1,781.83 per second |
+| mapFilterReduce | **Most**       | **34,252.84** per second |
+| concatMapReduce | **RxJS**       |  **2,889.56** per second |
+| concatMapReduce | AsyncIterators |        182.97 per second |
+| concatMapReduce | Most           |      2,318.10 per second |
+
+\* higher is better
+---
+## Native vs Transpiled
+
+It's likely that you'll want to transpile your async iterators to support all browsers.
+
+| Browser   | Supported |
+| --------- | --------- |
+| IE 11     | No        |
+| Edge      | No        |
+| Firefox   | Yes       |
+| Chrome    | Yes       |
+| Safari 12 | Yes       |
+---
+## reduce results
+
+| Variation | Implementation       |     Ops Per Second\*     |
+| --------- | -------------------- | -----------------------: |
+| reduce    | TypeScript 3.0.2     |  8,967.30 per second     |
+| reduce    | Babel 6.26.0         | 15,101.20 per second     |
+| reduce    | **Native**           | **19,129.27** per second |
+---
+class: center, middle
+# Thanks!
+---
+class: center, middle
+# Any questions?
+---
+class: center, middle
+# Should I be using Async Iterators?
+
 
     </textarea>
     <script src="https://remarkjs.com/downloads/remark-latest.min.js" type="text/javascript">

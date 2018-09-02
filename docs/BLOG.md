@@ -236,7 +236,7 @@ In this benchmark we implemented sum as a reduce over 1000 numbers.
 async function sum(source) {
   let accumulator = 0;
   for await (const item of source) {
-    accumulator += item * 2;
+    accumulator += item;
   }
   return accumulator;
 }
@@ -246,7 +246,7 @@ await sum(source);
 #### RxJS
 
 ```javascript
-Rx.from(source, scheduler)
+Rx.from(source)
   .pipe(RxOperators.reduce((a, n) => a + n, 0))
   .subscribe(/* do something with the result */);
 ```
@@ -271,7 +271,7 @@ async function mapFilterReduce(source) {
   let accumulator = 0;
   for await (const x of Native.from(array)) {
     if (x % 2 === 0) {
-      accumulator = accumulator + (x + x);
+      accumulator = accumulator + x * 2;
     }
   }
 }
@@ -284,7 +284,7 @@ await mapFilterReduce(source);
 Rx.from(array, scheduler)
   .pipe(
     RxOperators.filter(x => x % 2 === 0),
-    RxOperators.map(x => x + x),
+    RxOperators.map(x => x * 2),
     RxOperators.reduce((a, n) => a + n, 0)
   )
   .subscribe(/* do something with the result */);
