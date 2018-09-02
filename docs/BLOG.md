@@ -1,4 +1,4 @@
-# Introduction to Async Iteration
+# Introduction to Async Iterators
 
 Async Iterators make it easier to write code to manage asynchronous streams of data in a familiar way. The simplest way to create an async iterator is to use `async function*` e.g.:
 
@@ -10,7 +10,7 @@ async function* range(start, end) {
 }
 ```
 
-The easiest way to go through an async iterator is with the new `for await` syntax e.g.:
+You can go through the items return by an async iterator with `for await` e.g.:
 
 ```javascript
 for await(const item of range(1, 10)) {
@@ -26,9 +26,12 @@ Say you wanted to have your code notify you if the pound (GBP) ever reached pari
 // get the GBP / USD rate once a day
 async function* liveRates() {
   while(true) {
+    // fetch the rates
     const response =
       await fetch('https://api.exchangeratesapi.io/latest?base=GBP');
+    // parse the json body
     const json = await response.json();
+    // return the current GBPUSD exchange rate
     yield json.rates.USD;
     // pause for a day
     await delay(24 * 60 * 60 * 1000);
@@ -37,6 +40,7 @@ async function* liveRates() {
 
 // go through the prices as they come in
 for await(const price of liveRates()) {
+  // insert brexit joke here
   if(price <= 1) {
     console.log('yikes');
     break;
@@ -135,7 +139,7 @@ The [Axax](https://github.com/jamiemccrindle/axax) library has an implementation
 
 ## Cancellation and avoiding leaks
 
-Neither promises nor async iterators have a way to cancel them. There is a TC39 proposal for cancellation of asynchronous operations but it is still at stage 1.
+Neither promises nor async iterators have a reliable way to cancel them. There is a TC39 proposal for cancellation of asynchronous operations but it is still at stage 1.
 
 In the example below, we create an async iterable that gets stuck waiting for an
 upstream async iterable that never ends. Even though we call `return()` on it,
@@ -367,10 +371,10 @@ It's likely that you'll want to transpile your async iterators to support all br
 We tested the performance of the `reduce` implementation above
 using Babel and TypeScript to transpile the code.
 
-| Variation | Implementation |     Ops Per Second\* |
-| --------- | -------------- | -------------------: |
-| reduce    | TypeScript     |  9,218.42 per second |
-| reduce    | Babel          | 14,445.59 per second |
-| reduce    | Native         | 17,691.37 per second |
+| Variation | Implementation   |     Ops Per Second\* |
+| --------- | ---------------- | -------------------: |
+| reduce    | TypeScript 3.0.2 |  8,967.30 per second |
+| reduce    | Babel 6.26.0     | 15,101.20 per second |
+| reduce    | Native           | 19,129.27 per second |
 
 Interestingly Typescript transpilation results in a 50% slowdown while Babel is quite close to native performance. Babel requires the inclusion of the `regenerator-runtime` from Facebook.

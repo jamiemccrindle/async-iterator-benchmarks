@@ -64,6 +64,7 @@
   },
   "exclude": [
     "transpiled/**/*",
+    "jsPerf/**/*",
     "tsdist/**/*"
   ]
 }

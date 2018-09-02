@@ -13,5 +13,6 @@ async function reduce(reducer, initial, source) {
 }
 exports.reduce = reduce;
 function run(numberOfItems) {
-  reduce((accumulator, next) => accumulator + next, 0, range(0, numberOfItems));
+  return reduce((accumulator, next) => accumulator + next, 0, range(0, numberOfItems));
 }
+exports.run = run;
