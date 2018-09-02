@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Async Iterators</title>
+  <script>
+    async function* liveRates() {
+      while (true) {
+        const response =
+          await fetch('https://api.exchangeratesapi.io/latest?base=GBP');
+        const json = await response.json();
+        yield json.rates.USD;
+        // pause for a day
+        await delay(24 * 60 * 60 * 1000);
+      }
+    }
+
+    async function fetchit() {
+      // go through the prices as they come in
+      for await (const price of liveRates()) {
+        console.log(price);
+        if (price <= 1) {
+          console.log('yikes');
+          break;
+        }
+      }
+    }
+
+    // a function that pauses for a set amount of time
+    function delay(timeout) { return new Promise(resolve => setTimeout(resolve, timeout)); }
+
+  </script>
+</head>
+
+<body>
+  <button onclick="fetchit()">Click me</button>
+</body>
+
+</html>

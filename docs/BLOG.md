@@ -27,7 +27,7 @@ Say you wanted to have your code notify you if the pound (GBP) ever reached pari
 async function* liveRates() {
   while(true) {
     const response =
-      await fetch('https://exchangeratesapi.io/api/latest?base=GBP');
+      await fetch('https://api.exchangeratesapi.io/latest?base=GBP');
     const json = await response.json();
     yield json.rates.USD;
     // pause for a day
@@ -379,19 +379,3 @@ await iter.return();
 
 graphqljs
 readable streams
-
-In the tests we did, async iterators performed relatively poorly vs the default RxJS scheduler.
-
-Async Iteration was included in the ECMAScript standard in January 2018.
-
-NodeJS very much encouraged asynchronous programming right from the start
-
-In January 2018 the TC39 committee release the aptly named ECMAScript 2018.
-
-Cancellation and avoiding leaks
-Subject
-Vs RxJS
-Performance
-Transpilation
-Vs Rx
-https://docs.google.com/presentation/d/1r2V1sLG8JSSk8txiLh4wfTkom-BoOsk52FgPBy8o3RM/edit?usp=sharing
