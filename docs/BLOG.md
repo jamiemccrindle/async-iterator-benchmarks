@@ -114,7 +114,7 @@ It turns out that doing this generically is somewhat complicated because:
 - `for await` could run before there are any lines available
 - the async iterator next method could be called directly multiple times without waiting for new lines
 
-While the implementation is too complex for this blog, the interface for a generic mechanism isn't. Borrowing the concept of a Subject from RxJs, we could imagine having a class that does the following:
+While the implementation is too complex for this blog, the interface for a generic mechanism isn't. Borrowing the concept of a Subject from RxJS, we could imagine having a class that does the following:
 
 ```javascript
 function fromLineReader(lineReader) {
@@ -129,7 +129,7 @@ function fromLineReader(lineReader) {
 }
 ```
 
-## Async Iterators vs RxJs
+## Async Iterators vs RxJS
 
 Reactive Extensions for JavaScript or RxJS is another way to manage asynchronous streams. A significant difference between the two is in how control flows when using them. For example this is the control flow around an async iterable `for await`:
 
@@ -169,9 +169,9 @@ const subscribe = source
 
 The other significant difference is in how they perform.
 
-## Performance vs RxJs
+## Performance vs RxJS
 
-We compared the performance of async iterators to RxJs. As with all benchmarks, these should only be considered directional.
+We compared the performance of async iterators to RxJS. As with all benchmarks, these should only be considered directional.
 
 Async iterators are still relatively new and performance will vary across javascript engine, operating system, hardware and the problem you're trying to solve.
 
@@ -206,7 +206,7 @@ async function sum(source) {
 await sum(source);
 ```
 
-#### RxJs
+#### RxJS
 
 ```javascript
 Rx.from(source, scheduler)
@@ -218,7 +218,7 @@ Rx.from(source, scheduler)
 
 | Implementation |         Ops Per Second\* |
 | -------------- | -----------------------: |
-| **RxJs**       | **15,912.45** per second |
+| **RxJS**       | **15,912.45** per second |
 | AsyncIterators |      1,815.12 per second |
 
 \* higher is better
@@ -241,7 +241,7 @@ async function mapFilterReduce(source) {
 await mapFilterReduce(source);
 ```
 
-#### RxJs
+#### RxJS
 
 ```javascript
 Rx.from(array, scheduler)
@@ -257,7 +257,7 @@ Rx.from(array, scheduler)
 
 | Implementation |         Ops Per Second\* |
 | -------------- | -----------------------: |
-| **RxJs**       | **10,599.15** per second |
+| **RxJS**       | **10,599.15** per second |
 | AsyncIterators |      1,781.83 per second |
 
 \* higher is better
@@ -284,7 +284,7 @@ async function concatMapReduce(source) {
 await concatMapReduce(source);
 ```
 
-#### RxJs
+#### RxJS
 
 ```javascript
 Rx.from(array, scheduler)
@@ -299,7 +299,7 @@ Rx.from(array, scheduler)
 
 | Implementation |        Ops Per Second\* |
 | -------------- | ----------------------: |
-| **RxJs**       | **2,889.56** per second |
+| **RxJS**       | **2,889.56** per second |
 | AsyncIterators |       182.97 per second |
 
 \* higher is better
@@ -312,13 +312,13 @@ If you're very performance sensitive, you may consider other libraries e.g. `mos
 
 | Variation       | Implementation |         Ops Per Second\* |
 | --------------- | -------------- | -----------------------: |
-| reduce          | RxJs           |     15,912.45 per second |
+| reduce          | RxJS           |     15,912.45 per second |
 | reduce          | AsyncIterators |      1,815.12 per second |
 | reduce          | **Most**       | **66,560.13** per second |
-| mapFilterReduce | RxJs           |     10,599.15 per second |
+| mapFilterReduce | RxJS           |     10,599.15 per second |
 | mapFilterReduce | AsyncIterators |      1,781.83 per second |
 | mapFilterReduce | **Most**       | **34,252.84** per second |
-| concatMapReduce | **RxJs**       |  **2,889.56** per second |
+| concatMapReduce | **RxJS**       |  **2,889.56** per second |
 | concatMapReduce | AsyncIterators |        182.97 per second |
 | concatMapReduce | Most           |      2,318.10 per second |
 
@@ -379,7 +379,7 @@ await iter.return();
 graphqljs
 readable streams
 
-In the tests we did, async iterators performed relatively poorly vs the default RxJs scheduler.
+In the tests we did, async iterators performed relatively poorly vs the default RxJS scheduler.
 
 Async Iteration was included in the ECMAScript standard in January 2018.
 
