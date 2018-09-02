@@ -329,13 +329,13 @@ If you're very performance sensitive, you may consider other libraries e.g. `mos
 
 It's likely that you'll want to transpile your async iterators to support all browsers.
 
-| Browser | Supported |
-| ------- | --------- |
-| IE 11   | No        |
-| Edge    | No        |
-| Firefox | Yes       |
-| Chrome  | Yes       |
-| Safari  | Yes (12)  |
+| Browser   | Supported |
+| --------- | --------- |
+| IE 11     | No        |
+| Edge      | No        |
+| Firefox   | Yes       |
+| Chrome    | Yes       |
+| Safari 12 | Yes       |
 
 We tested the performance of the `reduce` implementation above
 using Babel and TypeScript to transpile the code.
