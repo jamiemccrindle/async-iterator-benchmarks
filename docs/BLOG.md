@@ -123,12 +123,17 @@ Borrowing the concept of a `Subject` from RxJS, we could imagine having a class 
 ```javascript
 function fromLineReader(lineReader) {
   const subject = new Subject();
+
   // send a line to the subject
   lineReader.on('line' => subject.onNext(line));
+  
   // close the subject when the line reader closes
   lineReader.on('close' => subject.onCompleted());
+  
   // close the line reader when the subject closes
   subject.finally(() => lineReader.close());
+
+  // return the async iterator
   return subject.iterable;
 }
 ```
