@@ -174,9 +174,7 @@ The other significant difference is in how they perform.
 
 ## Performance vs RxJS
 
-We compared the performance of async iterators to RxJS. As with all benchmarks, these should only be considered directional.
-
-Async iterators are still relatively new and performance will vary across javascript engine, operating system, hardware and the problem you're trying to solve.
+We compared the performance of async iterators to RxJS. As with all benchmarks, these should only be considered directional. Async iterators are still relatively new and performance will vary across javascript engine, operating system, hardware and the problem you're trying to solve.
 
 We used the benchmark.js library in all of these benchmarks.
 
