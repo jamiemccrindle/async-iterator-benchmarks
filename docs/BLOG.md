@@ -129,6 +129,8 @@ function fromLineReader(lineReader) {
 }
 ```
 
+Note: this does not handle backpressure.
+
 The [Axax](https://github.com/jamiemccrindle/axax) library has an implementation of `Subject` for async iterators.
 
 ## Async Iterators vs RxJS
