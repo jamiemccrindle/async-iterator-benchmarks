@@ -114,7 +114,7 @@ It turns out that doing this generically is somewhat complicated because:
 - `for await` could run before there are any lines available
 - the async iterator next method could be called directly multiple times without waiting for new lines
 
-While the implementation is too complex for this blog, the interface for a generic mechanism isn't. Borrowing the concept of a Subject from RxJS, we could imagine having a class that does the following:
+Borrowing the concept of a Subject from RxJS, we could imagine having a class that does the following:
 
 ```javascript
 function fromLineReader(lineReader) {
@@ -128,6 +128,8 @@ function fromLineReader(lineReader) {
   return subject.iterable;
 }
 ```
+
+The [Axax](https://github.com/jamiemccrindle/axax) library has an implementation of `Subject` for async iterators.
 
 ## Async Iterators vs RxJS
 
