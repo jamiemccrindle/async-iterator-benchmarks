@@ -335,7 +335,7 @@ It's likely that you'll want to transpile your async iterators to support all br
 | Edge    | No        |
 | Firefox | Yes       |
 | Chrome  | Yes       |
-| Safari  | Yes       |
+| Safari  | Yes (12)  |
 
 We tested the performance of the `reduce` implementation above
 using Babel and TypeScript to transpile the code.
