@@ -118,7 +118,7 @@ It turns out that doing this generically is somewhat complicated because:
 - `for await` could run before there are any lines available
 - the async iterator next method could be called directly multiple times without waiting for new lines
 
-Borrowing the concept of a Subject from RxJS, we could imagine having a class that does the following:
+Borrowing the concept of a `Subject` from RxJS, we could imagine having a class that does the following:
 
 ```javascript
 function fromLineReader(lineReader) {
@@ -143,7 +143,7 @@ Neither promises nor async iterators have a reliable way to cancel them. There i
 
 In the example below, we create an async iterable that gets stuck waiting for an
 upstream async iterable that never ends. Even though we call `return()` on it,
-there is no way for the `neverEnds()` to get cancelled and as a result, the `finally`
+there is no way for the `neverEnds()` to get cancelled and as a result the `finally`
 block is never called.
 
 ```javascript
