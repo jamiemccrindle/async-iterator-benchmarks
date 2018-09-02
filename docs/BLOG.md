@@ -81,7 +81,7 @@ As long as a JavaScript object has the following properties it can be used as an
 - If this is the last value, the Promise should resolve to { done: true }
 - Otherwise it should resolve to { value: value, done: false } where value is the next value
 
-This is somewhat more complicated than the async function* syntax but can be used to solve problems that async function* can't. For example, it is useful for turning a stream of events into an async iterable.
+This is somewhat more complicated than the `async function*` syntax but can be used to solve problems that `async function*` can't. For example, it is useful for turning a stream of events into an async iterable.
 
 ## Turning a stream of events into an async iterable
 
