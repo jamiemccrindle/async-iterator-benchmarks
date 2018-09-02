@@ -133,6 +133,33 @@ Note: this does not handle backpressure.
 
 The [Axax](https://github.com/jamiemccrindle/axax) library has an implementation of `Subject` for async iterators.
 
+## Cancellation and avoiding leaks
+
+Neither promises nor async iterators have a way to cancel them. There is a TC39 proposal for cancellation of asynchronous operations but it is still at stage 1.
+
+In the example below, we create an async iterable that gets stuck waiting for an
+upstream async iterable that never ends. Even though we call `return()` on it,
+there is no way for the `neverEnds()` to get cancelled and as a result, the `finally`
+block is never called.
+
+```javascript
+async function* asyncIterable() {
+  try {
+    // never ends is a async iterator that never
+    // produces a value or ends
+    for await (const item of neverEnds()) {
+      yield item;
+    }
+  } finally {
+    // never called
+    console.log("clean up resources");
+  }
+}
+
+const iter = asyncIterable();
+await iter.return();
+```
+
 ## Async Iterators vs RxJS
 
 Reactive Extensions for JavaScript or RxJS is another way to manage asynchronous streams. A significant difference between the two is in how control flows when using them. For example this is the control flow around an async iterable `for await`:
@@ -347,35 +374,3 @@ using Babel and TypeScript to transpile the code.
 | reduce    | Native         | 17,691.37 per second |
 
 Interestingly Typescript transpilation results in a 50% slowdown while Babel is quite close to native performance. Babel requires the inclusion of the `regenerator-runtime` from Facebook.
-
-## Cancellation and avoiding leaks
-
-Neither promises nor async iterators have a way to cancel them. There is a TC39 proposal for cancellation of asynchronous operations but it is still at stage 1.
-
-In the example below, we create an async iterable that gets stuck waiting for an
-upstream async iterable that never ends. Even though we call `return()` on it,
-there is no way for the `neverEnds()` to get cancelled and as a result, the `finally`
-block is never called.
-
-```javascript
-async function* asyncIterable() {
-  try {
-    // never ends is a async iterator that never
-    // produces a value or ends
-    for await (const item of neverEnds()) {
-      yield item;
-    }
-  } finally {
-    // never called
-    console.log("clean up resources");
-  }
-}
-
-const iter = asyncIterable();
-await iter.return();
-```
-
-## In the wild
-
-graphqljs
-readable streams
