@@ -134,7 +134,6 @@ function fromLineReader(lineReader) {
 Reactive Extensions for JavaScript or RxJS is another way to manage asynchronous streams. A significant difference between the two is in how control flows when using them. For example this is the control flow around an async iterable `for await`:
 
 ```javascript
-const source = // some async iterator
 console.log('starting');
 try {
   for await (const item of source) {
@@ -152,7 +151,7 @@ console.log('on to the next thing');
 And this is the equivalent control flow using RxJS
 
 ```javascript
-const source = console.log("starting"); // some observable
+console.log("starting");
 const subscribe = source
   .pipe(
     finalize(() => {
