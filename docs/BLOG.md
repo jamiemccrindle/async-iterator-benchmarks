@@ -216,10 +216,10 @@ Rx.from(source, scheduler)
 
 #### results
 
-| Implementation | Ops Per Second\*         |
-| -------------- | ------------------------ |
+| Implementation |         Ops Per Second\* |
+| -------------- | -----------------------: |
 | **RxJs**       | **15,912.45** per second |
-| AsyncIterators | 1,815.12 per second      |
+| AsyncIterators |      1,815.12 per second |
 
 \* higher is better
 
@@ -255,10 +255,10 @@ Rx.from(array, scheduler)
 
 #### results
 
-| Implementation | Ops Per Second\*         |
-| -------------- | ------------------------ |
+| Implementation |         Ops Per Second\* |
+| -------------- | -----------------------: |
 | **RxJs**       | **10,599.15** per second |
-| AsyncIterators | 1,781.83 per second      |
+| AsyncIterators |      1,781.83 per second |
 
 \* higher is better
 
@@ -297,10 +297,10 @@ Rx.from(array, scheduler)
 
 #### results
 
-| Implementation | Ops Per Second\*       |
-| -------------- | ---------------------- |
+| Implementation |       Ops Per Second\* |
+| -------------- | ---------------------: |
 | **RxJs**       | **2889.56** per second |
-| AsyncIterators | 182.97 per second      |
+| AsyncIterators |      182.97 per second |
 
 \* higher is better
 
@@ -310,17 +310,17 @@ We compared async iterators to RxJS because it's likely that folk will be choosi
 
 If you're very performance sensitive, you may consider other libraries e.g. `most`, depending on the problem you're solving:
 
-| Variation       | Implementation | Ops Per Second\*         |
-| --------------- | -------------- | ------------------------ |
-| reduce          | RxJs           | 15,912.45 per second     |
-| reduce          | AsyncIterators | 1,815.12 per second      |
+| Variation       | Implementation |         Ops Per Second\* |
+| --------------- | -------------- | -----------------------: |
+| reduce          | RxJs           |     15,912.45 per second |
+| reduce          | AsyncIterators |      1,815.12 per second |
 | reduce          | **Most**       | **66,560.13** per second |
-| mapFilterReduce | RxJs           | 10,599.15 per second     |
-| mapFilterReduce | AsyncIterators | 1,781.83 per second      |
+| mapFilterReduce | RxJs           |     10,599.15 per second |
+| mapFilterReduce | AsyncIterators |      1,781.83 per second |
 | mapFilterReduce | **Most**       | **34,252.84** per second |
-| concatMapReduce | **RxJs**       | **2,889.56** per second  |
-| concatMapReduce | AsyncIterators | 182.97 per second        |
-| concatMapReduce | Most           | 2,318.10 per second      |
+| concatMapReduce | **RxJs**       |  **2,889.56** per second |
+| concatMapReduce | AsyncIterators |        182.97 per second |
+| concatMapReduce | Most           |      2,318.10 per second |
 
 \* higher is better
 
@@ -339,9 +339,9 @@ It's likely that you'll want to transpile your async iterators to support all br
 We tested the performance of the `reduce` implementation above
 using Babel and TypeScript to transpile the code.
 
-| Variation | Implementation | Ops Per Second\*     |
-| --------- | -------------- | -------------------- |
-| reduce    | TypeScript     | 9,218.42 per second  |
+| Variation | Implementation |     Ops Per Second\* |
+| --------- | -------------- | -------------------: |
+| reduce    | TypeScript     |  9,218.42 per second |
 | reduce    | Babel          | 14,445.59 per second |
 | reduce    | Native         | 17,691.37 per second |
 
