@@ -1,6 +1,6 @@
 # Introduction to Async Iteration
 
-Async Iterators make it easier to write code to manage asynchronous streams of data in a familiar way. The simplest way to create an async iterator is to use async function\* e.g.:
+Async Iterators make it easier to write code to manage asynchronous streams of data in a familiar way. The simplest way to create an async iterator is to use `async function*` e.g.:
 
 ```javascript
 async function* range(start, end) {
@@ -10,7 +10,7 @@ async function* range(start, end) {
 }
 ```
 
-The easiest way to use an async iterator is with the new for await syntax e.g.:
+The easiest way to go through an async iterator is with the new `for await` syntax e.g.:
 
 ```javascript
 for await(const item of range(1, 10)) {
@@ -20,17 +20,22 @@ for await(const item of range(1, 10)) {
 
 The range function above could have been written using a regular generator. What the async keyword lets us do is use the await keyword inside the function as illustrated by the example below.
 
-Say you wanted to have your code notify you if the pound (GBP) ever reached parity with the dollar (USD). We could use exchangratesapi.io to get the latest rate and we'd politely only want to call their API once a day
+Say you wanted to have your code notify you if the pound (GBP) ever reached parity with the dollar (USD). We could use exchangratesapi.io to get the latest rate. To avoid overloading their servers, we only want to call their API once a day.
 
 ```javascript
 // get the GBP / USD rate once a day
 async function* liveRates() {
-  const response = await fetch('https://exchangeratesapi.io/api/latest?base=GBP');
-  const json = await response.json();
-  yield json.rates.USD
-  await delay(24 * 60 * 60 * 1000);
+  while(true) {
+    const response =
+      await fetch('https://exchangeratesapi.io/api/latest?base=GBP');
+    const json = await response.json();
+    yield json.rates.USD;
+    // pause for a day
+    await delay(24 * 60 * 60 * 1000);
+  }
 }
 
+// go through the prices as they come in
 for await(const price of liveRates()) {
   if(price <= 1) {
     console.log('yikes');
@@ -38,12 +43,13 @@ for await(const price of liveRates()) {
   }
 }
 
+// a function that pauses for a set amount of time
 function delay(timeout) { return new Promise(resolve => setTimeout(resolve, timeout)); }
 ```
 
 ## Async Iteration
 
-async function\* is an async generator. The mechanism they use internally is the AsyncIterator interface. By way of example, here is how the range function would be written as an AsyncIterator instead:
+`async function*` is an async generator. The mechanism they use internally is the AsyncIterator interface. By way of example, here is how the range function would be written as an AsyncIterator instead:
 
 ```javascript
 function range(start, end) {
@@ -103,9 +109,9 @@ console.log('done');
 
 It turns out that doing this generically is somewhat complicated because:
 
-- lineReader could send lines before the for await consumes them
+- lineReader could send lines before the `for await` consumes them
 - lineReader may need to pause sending lines so that we don't run out of memory
-- for await could run before there are any lines available
+- `for await` could run before there are any lines available
 - the async iterator next method could be called directly multiple times without waiting for new lines
 
 While the implementation is too complex for this blog, the interface for a generic mechanism isn't. Borrowing the concept of a Subject from RxJs, we could imagine having a class that does the following:
@@ -125,7 +131,7 @@ function fromLineReader(lineReader) {
 
 ## Async Iterators vs RxJs
 
-Reactive Extensions for JavaScript or RxJS is another way to manage asynchronous streams. A significant difference between the two is in how control flows when using them. For example this is the control flow around an async iterable for await:
+Reactive Extensions for JavaScript or RxJS is another way to manage asynchronous streams. A significant difference between the two is in how control flows when using them. For example this is the control flow around an async iterable `for await`:
 
 ```javascript
 const source = // some async iterator
@@ -180,7 +186,7 @@ In all of these benchmarks, the Rx default scheduler was used.
 | Property         | Value                 |
 | ---------------- | --------------------- |
 | Node             | 10.9.0                |
-| Mac              | 2.7 GHz Intel Core i7 |
+| Hardware         | 2.7 GHz Intel Core i7 |
 | Operating System | Mac OS X              |
 
 ### reduce
@@ -210,10 +216,10 @@ Rx.from(source, scheduler)
 
 #### results
 
-| Implementation | Ops Per Second\*     |
-| -------------- | -------------------- |
-| RxJs           | 15,912.45 per second |
-| AsyncIterators | 1,815.12 per second  |
+| Implementation | Ops Per Second\*         |
+| -------------- | ------------------------ |
+| **RxJs**       | **15,912.45** per second |
+| AsyncIterators | 1,815.12 per second      |
 
 \* higher is better
 
@@ -249,10 +255,10 @@ Rx.from(array, scheduler)
 
 #### results
 
-| Implementation | Ops Per Second\*     |
-| -------------- | -------------------- |
-| RxJs           | 10,599.15 per second |
-| AsyncIterators | 1,781.83 per second  |
+| Implementation | Ops Per Second\*         |
+| -------------- | ------------------------ |
+| **RxJs**       | **10,599.15** per second |
+| AsyncIterators | 1,781.83 per second      |
 
 \* higher is better
 
@@ -291,10 +297,10 @@ Rx.from(array, scheduler)
 
 #### results
 
-| Implementation | Ops Per Second\*   |
-| -------------- | ------------------ |
-| RxJs           | 2889.56 per second |
-| AsyncIterators | 182.97 per second  |
+| Implementation | Ops Per Second\*       |
+| -------------- | ---------------------- |
+| **RxJs**       | **2889.56** per second |
+| AsyncIterators | 182.97 per second      |
 
 \* higher is better
 
@@ -302,19 +308,21 @@ Rx.from(array, scheduler)
 
 We compared async iterators to RxJS because it's likely that folk will be choosing between these two ways of solving problems involving async streams given RxJS's popularity and that async iterators are now part of ECMAScript.
 
-If you're very performance sensitive, you may consider other libraries e.g. most.
+If you're very performance sensitive, you may consider other libraries e.g. `most`, depending on the problem you're solving:
 
-| Implementation | Variation       | Ops Per Second\*     |
-| -------------- | --------------- | -------------------- |
-| RxJs           | reduce          | 15,912.45 per second |
-| AsyncIterators | reduce          | 1,815.12 per second  |
-| Most           | reduce          | 66,560.13 per second |
-| RxJs           | mapFilterReduce | 10,599.15 per second |
-| AsyncIterators | mapFilterReduce | 1,781.83 per second  |
-| Most           | mapFilterReduce | 34,252.84 per second |
-| RxJs           | concatMapReduce | 2,889.56 per second  |
-| AsyncIterators | concatMapReduce | 182.97 per second    |
-| Most           | concatMapReduce | 2,318.10 per second  |
+| Variation       | Implementation | Ops Per Second\*         |
+| --------------- | -------------- | ------------------------ |
+| reduce          | RxJs           | 15,912.45 per second     |
+| reduce          | AsyncIterators | 1,815.12 per second      |
+| reduce          | **Most**       | **66,560.13** per second |
+| mapFilterReduce | RxJs           | 10,599.15 per second     |
+| mapFilterReduce | AsyncIterators | 1,781.83 per second      |
+| mapFilterReduce | **Most**       | **34,252.84** per second |
+| concatMapReduce | **RxJs**       | **2,889.56** per second  |
+| concatMapReduce | AsyncIterators | 182.97 per second        |
+| concatMapReduce | Most           | 2,318.10 per second      |
+
+\* higher is better
 
 ## Native vs Transpiled
 
@@ -329,20 +337,19 @@ It's likely that you'll want to transpile your async iterators to support all br
 | Safari  | Yes       |
 
 We tested the performance of the `reduce` implementation above
-using babel and typescript to transpile the code.
+using Babel and TypeScript to transpile the code.
 
-| Implementation | Variation | Ops Per Second\*     |
-| -------------- | --------- | -------------------- |
-| Typescript     | reduce    | 9,218.42 per second  |
-| Babel          | reduce    | 14,445.59 per second |
-| Native         | reduce    | 17,691.37 per second |
+| Variation | Implementation | Ops Per Second\*     |
+| --------- | -------------- | -------------------- |
+| reduce    | TypeScript     | 9,218.42 per second  |
+| reduce    | Babel          | 14,445.59 per second |
+| reduce    | Native         | 17,691.37 per second |
 
 Interestingly Typescript transpilation results in a 50% slowdown while Babel is quite close to native performance. Babel requires the inclusion of the `regenerator-runtime` from Facebook.
 
 ## Cancellation and avoiding leaks
 
-Neither promises nor async iterators have a way to cancel them. There is a TC39 proposal
-for cancellation of asynchronous operations but it is still at stage 1.
+Neither promises nor async iterators have a way to cancel them. There is a TC39 proposal for cancellation of asynchronous operations but it is still at stage 1.
 
 In the example below, we create an async iterable that gets stuck waiting for an
 upstream async iterable that never ends. Even though we call `return()` on it,
