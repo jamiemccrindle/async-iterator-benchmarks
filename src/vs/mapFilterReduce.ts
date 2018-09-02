@@ -28,13 +28,15 @@ export const mapFilterReduce = (numberOfItems: number) => {
   }
 
   async function nativeTest(deferred: any) {
-    let accumulator = 0;
-    for await (const x of Native.from(array)) {
-      if (x % 2 === 0) {
-        accumulator = accumulator + (x + x);
+    async function nativeMapFilterReduce(source: any) {
+      let accumulator = 0;
+      for await (const x of Native.from(array)) {
+        if (x % 2 === 0) {
+          accumulator = accumulator + (x + x);
+        }
       }
     }
-    deferred.resolve();
+    nativeMapFilterReduce(Native.from(array)).then(() => deferred.resolve());
   }
   return {
     rxTest,

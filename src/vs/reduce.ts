@@ -17,18 +17,19 @@ export const reduce = (numberOfItems: number) => {
 
   function mostTest(deferred: any) {
     Most.from(array)
-      .filter(x => x % 2 === 0)
-      .map(x => x + x)
       .reduce((a, n) => a + n, 0)
       .then(() => deferred.resolve());
   }
 
   async function nativeTest(deferred: any) {
-    let accumulator = 0;
-    for await (const x of Native.from(array)) {
-      accumulator = accumulator + x;
+    async function nativeReduce(source: any) {
+      let accumulator = 0;
+      for await (const x of source) {
+        accumulator += x;
+      }
+      return accumulator;
     }
-    deferred.resolve();
+    nativeReduce(Native.from(array)).then(() => deferred.resolve());
   }
   return {
     rxTest,

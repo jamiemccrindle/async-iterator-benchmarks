@@ -28,13 +28,15 @@ export const concatMapReduce = (numberOfItems: number) => {
   }
 
   async function nativeTest(deferred: any) {
-    let accumulator = 0;
-    for await (const outer of Native.from(array)) {
-      for await (const inner of Native.from(outer)) {
-        accumulator = accumulator + inner;
+    async function nativeConcatMapReduce(source: any) {
+      let accumulator = 0;
+      for await (const outer of source) {
+        for await (const inner of Native.from<number>(outer)) {
+          accumulator = accumulator + inner;
+        }
       }
     }
-    deferred.resolve();
+    nativeConcatMapReduce(Native.from(array)).then(() => deferred.resolve());
   }
   return {
     rxTest,
