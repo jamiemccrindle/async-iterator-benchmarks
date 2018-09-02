@@ -75,8 +75,8 @@ function range(start, end) {
 
 As long as a JavaScript object has the following properties it can be used as an AsyncIterator:
 
-- A method called: [Symbol.asyncIterator]()
-- [Symbol.asyncIterator]() returns an object with a next() method
+- A method called: \[Symbol.asyncIterator\]()
+- \[Symbol.asyncIterator\]() returns an object with a next() method
 - next() returns a Promise
 - If this is the last value, the Promise should resolve to { done: true }
 - Otherwise it should resolve to { value: value, done: false } where value is the next value
@@ -297,10 +297,10 @@ Rx.from(array, scheduler)
 
 #### results
 
-| Implementation |       Ops Per Second\* |
-| -------------- | ---------------------: |
-| **RxJs**       | **2889.56** per second |
-| AsyncIterators |      182.97 per second |
+| Implementation |        Ops Per Second\* |
+| -------------- | ----------------------: |
+| **RxJs**       | **2,889.56** per second |
+| AsyncIterators |       182.97 per second |
 
 \* higher is better
 
