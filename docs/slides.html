@@ -23,6 +23,52 @@
     .remark-inline-code {
       font-family: 'Anonymous Pro';
     }
+
+    td:not(:last-child) {
+      padding-right: 40px;
+    }
+
+    table {
+      border-collapse: collapse;
+      box-shadow: rgba(0, 0, 0, 0.3) 0px 2px 26px -11px;
+      border: 1px solid rgb(238, 238, 238);
+      padding: 14px;
+      display: inline-block;
+    }
+
+    td {
+      text-align: left;
+      padding: 4px;
+    }
+
+    th {
+      text-align: left;
+    }
+
+    thead>tr>th {
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgb(238, 238, 238);
+    }
+
+    tbody>tr>td:first-child {
+      padding-top: 10px;
+    }
+
+    li {
+      line-height: 1.8em;
+    }
+
+    .benchmark-results {
+      display: flex;
+      flex-flow: column;
+      align-items: center;
+    }
+
+    code {
+      border-radius: 2px;
+      box-shadow: rgba(0, 0, 0, 0.3) 0px 2px 26px -11px;
+      border: 1px solid rgb(238, 238, 238);
+    }
   </style>
 </head>
 
@@ -43,12 +89,23 @@ found at [jamie.mccrindle.org](https://jamie.mccrindle.org)
 
 ```javascript
 function* infiniteFibonacci() {
+
+  // start with n1 = 1 and n2 = 2
   let [n1, n2] = [1, 1];
+
+  // yield 1
   yield n1;
+
+  // continue indefinitely
   while (true) {
+
+    // yield the next value
     yield n2;
+
+    // n1 = n2, n2 = n1 + n2 and we cunningly avoid a temporary variable
     [n1, n2] = [n2, n1 + n2];
   }
+
 }
 ```
 ---
@@ -56,12 +113,17 @@ function* infiniteFibonacci() {
 
 ```javascript
 async function getLiveRate() {
+
+  // get the rates
   const response =
     await fetch('https://api.exchangeratesapi.io/latest?base=GBP');
+
   // parse the json body
   const json = await response.json();
+
   // return the current GBPUSD exchange rate
   yield json.rates.USD;
+
 }
 ```
 ---
@@ -69,20 +131,30 @@ async function getLiveRate() {
 ```javascript
 // get the GBP / USD rate once a day
 async function* getLiveRates() {
+
+  // continue indefinitely
   while(true) {
+  
     // fetch the rates
     const response =
       await fetch('https://api.exchangeratesapi.io/latest?base=GBP');
-    // parse the json body
+  
+      // parse the json body
     const json = await response.json();
+  
     // return the current GBPUSD exchange rate
     yield json.rates.USD;
+  
     // pause for a day
     await delay(24 * 60 * 60 * 1000);
   }
+
 }
+
 // a function that pauses for a set amount of time
-function delay(timeout) { return new Promise(resolve => setTimeout(resolve, timeout)); }
+function delay(timeout) { 
+  return new Promise(resolve => setTimeout(resolve, timeout)); 
+}
 ```
 ---
 ## Using our rate watch
@@ -90,11 +162,12 @@ function delay(timeout) { return new Promise(resolve => setTimeout(resolve, time
 ```javascript
 // go through the prices as they come in
 for await(const price of getLiveRates()) {
-  // insert brexit joke here
+
   if(price &lt;= 1) {
-    console.log('yikes');
+    console.log('brexit means brexit');
     break;
   }
+
 }
 ```
 ---
@@ -124,7 +197,7 @@ export async function* sleepSort(values) {
 }
 ```
 ---
-# The 5 laws of AsyncIterators
+## The 5 laws of AsyncIterators
 
 Async generators are built on top of the AsyncIterator interface
 
@@ -248,7 +321,6 @@ await iter.return();
 ### Control flow for async iterators
 
 ```javascript
-
 console.log('starting');
 try {
   for await (const item of source) {
@@ -317,14 +389,18 @@ Rx.from(source)
   .pipe(RxOperators.reduce((a, n) => a + n, 0))
 ```
 ---
+class: center, middle
+
 ## reduce results
 
+.benchmark-results[
 | Implementation |         Ops Per Second\* |
 | -------------- | -----------------------: |
 | **RxJS**       | **15,912.45** per second |
 | AsyncIterators |      1,815.12 per second |
 
 \* higher is better
+]
 ---
 ## map filter reduce
 
@@ -355,15 +431,18 @@ Rx.from(source)
 ```
 
 ---
+class: center, middle
+
 ## map filter reduce results
 
+.benchmark-results[
 | Implementation |         Ops Per Second\* |
 | -------------- | -----------------------: |
 | **RxJS**       | **10,599.15** per second |
 | AsyncIterators |      1,781.83 per second |
 
 \* higher is better
-
+]
 ---
 ### concat map reduce
 
@@ -394,18 +473,24 @@ Rx.from(source)
 ```
 
 ---
+class: center, middle
+
 ## concatMap reduce results
 
+.benchmark-results[
 | Implementation |        Ops Per Second\* |
 | -------------- | ----------------------: |
 | **RxJS**       | **2,889.56** per second |
 | AsyncIterators |       182.97 per second |
 
 \* higher is better
-
+]
 ---
+class: center, middle
+
 ## vs Most
 
+.benchmark-results[
 | Variation       | Implementation |         Ops Per Second\* |
 | --------------- | -------------- | -----------------------: |
 | reduce          | RxJS           |     15,912.45 per second |
@@ -419,6 +504,7 @@ Rx.from(source)
 | concatMapReduce | Most           |      2,318.10 per second |
 
 \* higher is better
+]
 ---
 ## Native vs Transpiled
 
@@ -432,13 +518,20 @@ It's likely that you'll want to transpile your async iterators to support all br
 | Chrome    | Yes       |
 | Safari 12 | Yes       |
 ---
+class: center
+
 ## reduce results
 
+.benchmark-results[
 | Variation | Implementation       |     Ops Per Second\*     |
 | --------- | -------------------- | -----------------------: |
 | reduce    | TypeScript 3.0.2     |  8,967.30 per second     |
 | reduce    | Babel 6.26.0         | 15,101.20 per second     |
 | reduce    | **Native**           | **19,129.27** per second |
+
+\* higher is better
+]
+
 ---
 class: center, middle
 # Thanks!
@@ -454,7 +547,11 @@ class: center, middle
   <script src="https://remarkjs.com/downloads/remark-latest.min.js" type="text/javascript">
   </script>
   <script type="text/javascript">
-    var slideshow = remark.create();
+    var slideshow = remark.create({
+      highlightStyle: 'github',
+      highlightLanguage: 'remark',
+      highlightLines: true
+    });
   </script>
 </body>
 
