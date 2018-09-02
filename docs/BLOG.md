@@ -340,7 +340,7 @@ Rx.from(array, scheduler)
 
 We compared async iterators to RxJS because it's likely that folk will be choosing between these two ways of solving problems involving async streams given RxJS's popularity and that async iterators are now part of ECMAScript.
 
-If you're very performance sensitive, you may consider other libraries e.g. `most`, depending on the problem you're solving:
+If you're very performance sensitive, you may consider other libraries e.g. `most` but it will depend on the problem you're solving. Here are the same benchmarks including `most`.
 
 | Variation       | Implementation |         Ops Per Second\* |
 | --------------- | -------------- | -----------------------: |
