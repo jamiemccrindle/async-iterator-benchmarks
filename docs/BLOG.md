@@ -126,10 +126,10 @@ function fromLineReader(lineReader) {
 
   // send a line to the subject
   lineReader.on('line' => subject.onNext(line));
-  
+
   // close the subject when the line reader closes
   lineReader.on('close' => subject.onCompleted());
-  
+
   // close the line reader when the subject closes
   subject.finally(() => lineReader.close());
 
@@ -253,10 +253,11 @@ Rx.from(source)
 
 #### results
 
-| Implementation |         Ops Per Second\* |
-| -------------- | -----------------------: |
-| **RxJS**       | **15,912.45** per second |
-| AsyncIterators |      1,815.12 per second |
+| Implementation   |         Ops Per Second\* |
+| ---------------- | -----------------------: |
+| **RxJS default** | **15,912.45** per second |
+| RxJS queued      |      5,353.40 per second |
+| AsyncIterators   |      1,815.12 per second |
 
 \* higher is better
 
@@ -292,10 +293,11 @@ Rx.from(array, scheduler)
 
 #### results
 
-| Implementation |         Ops Per Second\* |
-| -------------- | -----------------------: |
-| **RxJS**       | **10,599.15** per second |
-| AsyncIterators |      1,781.83 per second |
+| Implementation   |         Ops Per Second\* |
+| ---------------- | -----------------------: |
+| **RxJS default** | **10,599.15** per second |
+| RxJS queued      |      2,711.63 per second |
+| AsyncIterators   |      1,781.83 per second |
 
 \* higher is better
 
@@ -334,10 +336,11 @@ Rx.from(array, scheduler)
 
 #### results
 
-| Implementation |        Ops Per Second\* |
-| -------------- | ----------------------: |
-| **RxJS**       | **2,889.56** per second |
-| AsyncIterators |       182.97 per second |
+| Implementation   |        Ops Per Second\* |
+| ---------------- | ----------------------: |
+| **RxJS default** | **2,889.56** per second |
+| RxJS queued      |     1,845.89 per second |
+| AsyncIterators   |       182.97 per second |
 
 \* higher is better
 

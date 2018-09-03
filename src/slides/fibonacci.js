@@ -14,3 +14,9 @@ for(const value of infiniteFiboncci()) {
   }
   console.log(value);
 }
+
+function naturalNumbers(callback) {
+  while(true)
+    if(!callback(i++))
+      break;
+}

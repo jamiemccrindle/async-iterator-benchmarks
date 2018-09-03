@@ -5,7 +5,7 @@
   <title>Introduction to Async Iterators</title>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <style type="text/css">
-    @import url(https://fonts.googleapis.com/css?family=Raleway);
+    @import url(https://fonts.googleapis.com/css?family=Montserrat);
     @import url(https://fonts.googleapis.com/css?family=Roboto:400,700,400italic);
     @import url(https://fonts.googleapis.com/css?family=Anonymous+Pro:400,700,400italic);
     body {
@@ -15,7 +15,7 @@
     h1,
     h2,
     h3 {
-      font-family: 'Raleway';
+      font-family: 'Montserrat';
       font-weight: normal;
     }
 
@@ -64,10 +64,22 @@
       align-items: center;
     }
 
-    code {
+    .remark-code {
       border-radius: 2px;
       box-shadow: rgba(0, 0, 0, 0.3) 0px 2px 26px -11px;
       border: 1px solid rgb(238, 238, 238);
+    }
+
+    .max-width-image img {
+      width: 100%;
+    }
+
+    .max-height-image img {
+      width: 350px;
+    }
+
+    a {
+      text-decoration: none;
     }
   </style>
 </head>
@@ -79,13 +91,36 @@ class: center, middle
 
 An introduction to
 # Async Iterators
-in JavaScript
+## in JavaScript
 
 by Jamie McCrindle
 
-found at [jamie.mccrindle.org](https://jamie.mccrindle.org)
+find me at [jamie.mccrindle.org](https://jamie.mccrindle.org)
 ---
 ## Generators are great
+
+### Before
+
+```javascript
+function naturalNumbers(callback) {
+  while(true)
+    // break out of the loop if the 
+    // callback returns false
+    if(!callback(i++))
+      break;
+}
+```
+--
+### After
+
+```javascript
+function* naturalNumbers() {
+  let i = 0;
+  while(true) yield i++;
+}
+```
+---
+## Generators are great: interview edition
 
 ```javascript
 function* infiniteFibonacci() {
@@ -111,6 +146,26 @@ function* infiniteFibonacci() {
 ---
 ## So is async await
 
+### Before
+
+```javascript
+function getLiveRate() {
+
+  // get the rates
+  return fetch('https://api.exchangeratesapi.io/latest?base=GBP')
+
+      // parse the json body
+      .then(response => response.json())
+    
+      // return the current GBPUSD exchange rate
+      .then(json => json.rates.USD)
+}
+```
+---
+## So is async await
+
+### After
+
 ```javascript
 async function getLiveRate() {
 
@@ -122,16 +177,34 @@ async function getLiveRate() {
   const json = await response.json();
 
   // return the current GBPUSD exchange rate
-  yield json.rates.USD;
+  return json.rates.USD;
 
 }
 ```
 ---
-## Why not combine them!
+class: center
+
+## Why not both?
+
+.max-height-image[![Why not both](images/dog-cat.jpg)]
+---
+class: center
+
+## Why not both?
+
+.max-width-image[![Why not both](images/spider-mouse.gif)]
+---
+class: center
+
+## Why not both?
+
+[![Why not both](images/croc.png)
+
+---
+## Why not both?
 ```javascript
 // get the GBP / USD rate once a day
 async function* getLiveRates() {
-
   // continue indefinitely
   while(true) {
   
@@ -148,13 +221,11 @@ async function* getLiveRates() {
     // pause for a day
     await delay(24 * 60 * 60 * 1000);
   }
-
 }
 
 // a function that pauses for a set amount of time
-function delay(timeout) { 
-  return new Promise(resolve => setTimeout(resolve, timeout)); 
-}
+const delay = (timeout) => 
+  new Promise(resolve => setTimeout(resolve, timeout)); 
 ```
 ---
 ## Using our rate watch
@@ -170,8 +241,10 @@ for await(const price of getLiveRates()) {
 
 }
 ```
+--
+.center[![Celebration](images/theresa-may.gif)]
 ---
-## Sleep Sort using Async Generators!
+## Sleep Sort!
 
 ```javascript
 const deferred = () => {
@@ -197,7 +270,7 @@ export async function* sleepSort(values) {
 }
 ```
 ---
-## The 5 laws of AsyncIterators
+## The AsyncIterator interface
 
 Async generators are built on top of the AsyncIterator interface
 
@@ -206,7 +279,37 @@ Async generators are built on top of the AsyncIterator interface
 - next() returns a `Promise`
 - If this is the last value, the `Promise` should resolve to `{ done: true }`
 - Otherwise it should resolve to `{ value: value, done: false }` where value is the next value
+- The object returned by `[Symbol.asyncIterator]()` can optionally have a `throw()` and `return()` method
 
+---
+## interval as an AsyncIterator
+
+```javascript
+function interval(milliseconds) {
+  let running = true;
+  let i = 0;
+  return {
+    [Symbol.asyncIterator]() {
+      return this;
+    },
+    next(value) {
+      return running
+        ? delay(milliseconds)
+            .then(() => ({ value: i++, done: false }))
+        : Promise.resolve({ done: true });
+    },
+    throw(error) {
+      running = false;
+      return Promise.resolve({ done: true });
+    },
+    return(value) {
+      running = false;
+      return Promise.resolve({ done: true });
+    }
+  };
+}
+  
+```
 ---
 ## Live Rates Hard Mode
 
@@ -224,7 +327,7 @@ function liveRatesHardMode() {
           const json = await response.json();
           // only delay after the first time
           if (!firstTime)
-            await delay(5 * 1000);
+            await delay(24 * 60 * 60 * 1000);
           else firstTime = false;
           return { value: json.rates.USD, done: false };
         }
@@ -252,7 +355,7 @@ lineReader.on("close", () => {
 We could use this instead:
 
 ```javascript
-for await (const line of lines) {
+for await (const line of fromLineReader(lineReader)) {
     console.log(line);
 }
 console.log('done');
@@ -358,8 +461,6 @@ const subscribe = source
 ---
 ## Performance vs RxJS
 
-In all of these benchmarks, the Rx default scheduler was used.
-
 | Property         | Value                 |
 | ---------------- | --------------------- |
 | Node             | 10.9.0                |
@@ -394,10 +495,11 @@ class: center, middle
 ## reduce results
 
 .benchmark-results[
-| Implementation |         Ops Per Second\* |
-| -------------- | -----------------------: |
-| **RxJS**       | **15,912.45** per second |
-| AsyncIterators |      1,815.12 per second |
+| Implementation   |         Ops Per Second\* |
+| ---------------- | -----------------------: |
+| **RxJS default** | **15,912.45** per second |
+| RxJS queued      |      5,353.40 per second |
+| AsyncIterators   |      1,815.12 per second |
 
 \* higher is better
 ]
@@ -436,10 +538,11 @@ class: center, middle
 ## map filter reduce results
 
 .benchmark-results[
-| Implementation |         Ops Per Second\* |
-| -------------- | -----------------------: |
-| **RxJS**       | **10,599.15** per second |
-| AsyncIterators |      1,781.83 per second |
+| Implementation   |         Ops Per Second\* |
+| ---------------- | -----------------------: |
+| **RxJS default** | **10,599.15** per second |
+| RxJS queued      |      2,711.63 per second |
+| AsyncIterators   |      1,781.83 per second |
 
 \* higher is better
 ]
@@ -478,30 +581,31 @@ class: center, middle
 ## concatMap reduce results
 
 .benchmark-results[
-| Implementation |        Ops Per Second\* |
-| -------------- | ----------------------: |
-| **RxJS**       | **2,889.56** per second |
-| AsyncIterators |       182.97 per second |
+| Implementation   |        Ops Per Second\* |
+| ---------------- | ----------------------: |
+| **RxJS default** | **2,889.56** per second |
+| RxJS queued      |     1,845.89 per second |
+| AsyncIterators   |       182.97 per second |
 
 \* higher is better
 ]
 ---
 class: center, middle
 
-## vs Most
+## vs `most`
 
 .benchmark-results[
-| Variation       | Implementation |         Ops Per Second\* |
-| --------------- | -------------- | -----------------------: |
-| reduce          | RxJS           |     15,912.45 per second |
-| reduce          | AsyncIterators |      1,815.12 per second |
-| reduce          | **Most**       | **66,560.13** per second |
-| mapFilterReduce | RxJS           |     10,599.15 per second |
-| mapFilterReduce | AsyncIterators |      1,781.83 per second |
-| mapFilterReduce | **Most**       | **34,252.84** per second |
-| concatMapReduce | **RxJS**       |  **2,889.56** per second |
-| concatMapReduce | AsyncIterators |        182.97 per second |
-| concatMapReduce | Most           |      2,318.10 per second |
+| Variation       | Implementation   |         Ops Per Second\* |
+| --------------- | ---------------- | -----------------------: |
+| reduce          | RxJS default     |     15,912.45 per second |
+| reduce          | AsyncIterators   |      1,815.12 per second |
+| reduce          | **Most**         | **66,560.13** per second |
+| mapFilterReduce | RxJS default     |     10,599.15 per second |
+| mapFilterReduce | AsyncIterators   |      1,781.83 per second |
+| mapFilterReduce | **Most**         | **34,252.84** per second |
+| concatMapReduce | **RxJS default** |  **2,889.56** per second |
+| concatMapReduce | AsyncIterators   |        182.97 per second |
+| concatMapReduce | Most             |      2,318.10 per second |
 
 \* higher is better
 ]
@@ -539,9 +643,14 @@ class: center, middle
 class: center, middle
 # Any questions?
 ---
-class: center, middle
-# Should I be using Async Iterators?
+class: center
 
+# When should I use Async Iterators?
+--
+
+.center[###When readability is important and your performance is not cpu bound
+
+###e.g. when it is IO or network bound]
 
     </textarea>
   <script src="https://remarkjs.com/downloads/remark-latest.min.js" type="text/javascript">
