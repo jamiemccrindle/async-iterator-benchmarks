@@ -218,13 +218,21 @@ Note:
 the implementations are not exactly equivalent but match how
 these problems would be idiomatically solved using each framework.
 
-In all of these benchmarks, the Rx default scheduler was used.
-
 | Property         | Value                 |
 | ---------------- | --------------------- |
 | Node             | 10.9.0                |
 | Hardware         | 2.7 GHz Intel Core i7 |
 | Operating System | Mac OS X              |
+
+### RxJS Schedulers
+
+| Scheduler                 | Purpose                                                                                                                                                                        |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `null`                    | By not passing any scheduler, notifications are delivered synchronously and recursively. Use this for constant-time operations or tail recursive operations.                   |
+| `queueScheduler`          | Schedules on a queue in the current event frame (trampoline scheduler). Use this for iteration operations.                                                                     |
+| `asapScheduler`           | Schedules on the micro task queue, which is the same queue used for promises. Basically after the current job, but before the next job. Use this for asynchronous conversions. |
+| `asyncScheduler`          | Schedules work with `setInterval`. Use this for time-based operations.                                                                                                         |
+| `animationFrameScheduler` | Schedules task that will happen just before next browser content repaint. Can be used to create smooth browser animations.                                                     |
 
 ### reduce
 
@@ -298,7 +306,7 @@ Rx.from(array, scheduler)
 | ---------------- | -----------------------: |
 | **RxJS default** | **10,599.15** per second |
 | RxJS queued      |      2,711.63 per second |
-| RxJS asap        |       801.94 per second |
+| RxJS asap        |        801.94 per second |
 | AsyncIterators   |      1,781.83 per second |
 
 \* higher is better

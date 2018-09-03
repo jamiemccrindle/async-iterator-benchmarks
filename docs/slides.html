@@ -466,6 +466,22 @@ const subscribe = source
 | Node             | 10.9.0                |
 | Hardware         | 2.7 GHz Intel Core i7 |
 | Operating System | Mac OS X              |
+
+---
+## RxJS Schedulers
+| Scheduler                 | Purpose                                                                                                                                                                        |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `null`                    | By not passing any scheduler, notifications are delivered synchronously and recursively. Use this for constant-time operations or tail recursive operations.                   |
+| `queueScheduler`          | Schedules on a queue in the current event frame (trampoline scheduler). Use this for iteration operations.                                                                     |
+| `asapScheduler`           | Schedules on the micro task queue, which is the same queue used for promises. Basically after the current job, but before the next job. Use this for asynchronous conversions. |
+| `asyncScheduler`          | Schedules work with `setInterval`. Use this for time-based operations.                                                                                                         |
+| `animationFrameScheduler` | Schedules task that will happen just before next browser content repaint. Can be used to create smooth browser animations.                                                     |
+---
+class: center, middle
+## RxJS default scheduler
+_It's a result of default recursive scheduling on synchronous observable types. Where RxJS 4 used trampoline scheduling by default, we're using recursive scheduling for performance reasons. The side effect to this is that if you retry or repeat more than 255 times, you blow the stack._
+
+\- [@benlesh](https://github.com/ReactiveX/rxjs/issues/651#issuecomment-153944205)
 ---
 ## reduce
 
@@ -549,7 +565,7 @@ class: center, middle
 \* higher is better
 ]
 ---
-### concat map reduce
+## concat map reduce
 
 In this case the source is an array of arrays of numbers that
 is 100x100.
@@ -654,6 +670,11 @@ class: center
 .center[###When readability is important and your performance is not cpu bound
 
 ###e.g. when it is IO or network bound]
+---
+class: center, middle
+# Where can I find these benchmarks?
+
+https://github.com/jamiemccrindle/async-iterator-benchmarks
 
     </textarea>
   <script src="https://remarkjs.com/downloads/remark-latest.min.js" type="text/javascript">
