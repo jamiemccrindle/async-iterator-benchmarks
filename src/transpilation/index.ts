@@ -57,5 +57,5 @@ export function runSuite(numberOfItems: number) {
 }
 
 export async function transpilation() {
-  await runSuite(100);
+  await runSuite(1000);
 }
