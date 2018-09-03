@@ -257,6 +257,7 @@ Rx.from(source)
 | ---------------- | -----------------------: |
 | **RxJS default** | **15,912.45** per second |
 | RxJS queued      |      5,353.40 per second |
+| RxJS asap        |      1,022.07 per second |
 | AsyncIterators   |      1,815.12 per second |
 
 \* higher is better
@@ -297,6 +298,7 @@ Rx.from(array, scheduler)
 | ---------------- | -----------------------: |
 | **RxJS default** | **10,599.15** per second |
 | RxJS queued      |      2,711.63 per second |
+| RxJS asap        |       801.94 per second |
 | AsyncIterators   |      1,781.83 per second |
 
 \* higher is better
@@ -340,6 +342,7 @@ Rx.from(array, scheduler)
 | ---------------- | ----------------------: |
 | **RxJS default** | **2,889.56** per second |
 | RxJS queued      |     1,845.89 per second |
+| RxJS asap        |     1,242.96 per second |
 | AsyncIterators   |       182.97 per second |
 
 \* higher is better
