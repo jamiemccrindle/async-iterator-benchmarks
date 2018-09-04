@@ -96,6 +96,40 @@ An introduction to
 by Jamie McCrindle
 
 find me at [jamie.mccrindle.org](https://jamie.mccrindle.org)
+
+???
+
+Head of Technology for Business Banking at Investec
+No um, or uh
+---
+class: middle
+
+### Why Async Generators
+### Async Iterators
+### Using Async Iterators
+### vs Rx
+### Performance
+### Q&A
+---
+### History
+
+* 2014: First Proposal
+* 2015: Available in Babel
+* 2017: Available in TypeScript 2.3
+* 2018: Part of the ECMAScript Standard
+
+???
+
+In the wild: graphql-js
+---
+class: middle, center
+
+### Why Async Generators
+
+???
+
+Before I talk about Async Generators I'm going to talk about
+why generators and async await are useful
 ---
 ## Generators are great
 
@@ -143,6 +177,13 @@ function* infiniteFibonacci() {
 
 }
 ```
+
+???
+
+This is my favourite way to write fibonacci. Not only because
+it's pretty neat using generators but also because the destructuring
+saves a temporary variable
+
 ---
 ## So is async await
 
@@ -159,8 +200,16 @@ function getLiveRate() {
     
       // return the current GBPUSD exchange rate
       .then(json => json.rates.USD)
+
 }
 ```
+
+???
+
+Talk about what the code is doing
+In this instance, the promise chain doesn't look too bad
+but as you add more of them, it becomes harder to reason about the code.
+
 ---
 ## So is async await
 
@@ -181,6 +230,13 @@ async function getLiveRate() {
 
 }
 ```
+
+???
+Talk about the code
+The great thing about async await is that it makes asynchronous
+code appear synchronous which means, for example that try catch
+finally blocks work 
+
 ---
 class: center
 
@@ -199,6 +255,10 @@ class: center
 ## Why not both?
 
 [![Why not both](images/croc.png)
+
+???
+
+This is a crocodile with butterflies on it
 
 ---
 ## Why not both?
@@ -227,6 +287,11 @@ async function* getLiveRates() {
 const delay = (timeout) => 
   new Promise(resolve => setTimeout(resolve, timeout)); 
 ```
+
+???
+
+Talk about the code
+
 ---
 ## Using our rate watch
 
@@ -243,6 +308,13 @@ for await(const price of getLiveRates()) {
 ```
 --
 .center[![Celebration](images/theresa-may.gif)]
+
+???
+
+The for await syntax is now part of the language and it's how you 
+loop through an async iterator much like you can loop through
+a generator using for of
+
 ---
 ## Sleep Sort!
 
@@ -269,6 +341,23 @@ export async function* sleepSort(values) {
   }
 }
 ```
+
+???
+
+This was going to be my first example of how async generators can
+solve problems that regular ones can't but it ended up being more 
+complicated than I expected.
+
+For those of you who don't know, sleep sort sorts numeric values by
+adding a delay that's a multiple of the item in the unsorted collection
+and just returning the values as they come in.
+
+Talk about the code
+
+---
+class: middle, center
+
+### Async Iterators
 ---
 ## The AsyncIterator interface
 
@@ -280,6 +369,10 @@ Async generators are built on top of the AsyncIterator interface
 - If this is the last value, the `Promise` should resolve to `{ done: true }`
 - Otherwise it should resolve to `{ value: value, done: false }` where value is the next value
 - The object returned by `[Symbol.asyncIterator]()` can optionally have a `throw()` and `return()` method
+
+???
+
+Read the slide.
 
 ---
 ## interval as an AsyncIterator
@@ -310,11 +403,15 @@ function interval(milliseconds) {
 }
   
 ```
+???
+
+Talk about the code.
+
 ---
-## Live Rates Hard Mode
+## Live Rates as an Async Iterator
 
 ```javascript
-function liveRatesHardMode() {
+function getLiveRates() {
   let firstTime = true;
   return {
     // async iterables have a method called [Symbol.asyncIterator]
@@ -336,6 +433,15 @@ function liveRatesHardMode() {
   };
 }
 ```
+
+???
+
+Talk about the code
+
+---
+class: middle, center
+
+### Using Async Iterators
 ---
 ## Turning a stream of events into an async iterable
 
@@ -391,11 +497,23 @@ function fromLineReader(lineReader) {
 }
 ```
 
-The [Axax](https://github.com/jamiemccrindle/axax) library has an implementation of `Subject` for async iterators.
-
 ???
 
-Notes
+Talk about the code
+
+---
+## Axax
+
+Axax is a library for async iterators found here
+
+https://github.com/jamiemccrindle/axax
+
+It includes:
+
+* map, reduce, filter, flatMap etc.
+* fromLineReader, fromNodeStream
+* concurrentMap
+* Subject
 ---
 ## Cancellation and leaks
 
@@ -422,8 +540,13 @@ const iter = asyncIterable();
 // doesn't do much as the iterable is stuck waiting for neverEnds()
 await iter.return();
 ```
+
 ---
-## Async Iterators vs RxJS
+class: middle, center
+
+### vs RxJS
+---
+## vs RxJS
 
 ### Control flow for async iterators
 
@@ -443,7 +566,7 @@ console.log('on to the next thing');
 ```
 
 ---
-## Async Iterators vs RxJS
+## vs RxJS
 
 ### Control flow for RxJS
 
@@ -462,6 +585,10 @@ const subscribe = source
     () => console.log("succeeded")
   );
 ```
+---
+class: middle, center
+
+### Performance
 ---
 ## Performance vs RxJS
 
@@ -660,12 +787,6 @@ class: center
 ]
 
 ---
-class: center, middle
-# Thanks!
----
-class: center, middle
-# Any questions?
----
 class: center
 
 # When should I use Async Iterators?
@@ -674,6 +795,12 @@ class: center
 .center[###When readability is important and your performance is not cpu bound
 
 ###e.g. when it is IO or network bound]
+---
+class: center, middle
+# Thanks!
+---
+class: center, middle
+# Any questions?
 ---
 class: center, middle
 # Where can I find these benchmarks?
