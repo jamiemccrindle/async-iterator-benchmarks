@@ -1,11 +1,18 @@
+# Introduction
+
+We're using React and TypeScript on the front-end in the Banking for Business team in Investec UK. We've been striving to keep our code as simple as possible which motivated our choice of MobX on the front-end over Redux. We do occasionally need to build functionality that needs to react to a stream of events and we've been discussing bringing RxJS into our stack.
+
+In keeping with our aim to keep the code simple, we decided to see if Async Iterators could solve the same problems that RxJS would in way that is easier to reason about. This blog provides an overview of what Async Iterators are and how they compare to RxJS both in terms of usage and performance.
+
 # Introduction to Async Iterators
 
-Async Iterators make it easier to write code to manage asynchronous streams of data in a familiar way. The simplest way to create an async iterator is to use `async function*` e.g.:
+Async Iterators make it easier to write code to create and consume asynchronous streams of data in a familiar imperative way. The simplest way to create an async iterator is to use `async function*`. In the `rangeWithDelay` example below we return the whole numbers between `start` and `end` with a delay of `waitForMilliseconds`
 
 ```javascript
-async function* range(start, end) {
+async function* rangeWithDelay(start, end, waitForMilliseconds) {
   for (let i = start; i < end; i++) {
     yield i;
+    await delay(waitForMilliseconds);
   }
 }
 ```
@@ -13,14 +20,12 @@ async function* range(start, end) {
 You can go through the items return by an async iterator with `for await` e.g.:
 
 ```javascript
-for await(const item of range(1, 10)) {
+for await(const item of rangeWithDelay(1, 10, 1000)) {
   console.log(item);
 }
 ```
 
-The range function above could have been written using a regular generator. What the async keyword lets us do is use the await keyword inside the function as illustrated by the example below.
-
-Say you wanted to have your code notify you if the pound (GBP) ever reached parity with the dollar (USD). We could use exchangratesapi.io to get the latest rate. To avoid overloading their servers, we only want to call their API once a day.
+One of the services we offer our customers is a notification when an exchange rate between two currencies hits a certain level. Say you wanted to write a simple version of this yourself where you have your code notify you if the pound (GBP) ever reached parity with the dollar (USD). We could use exchangratesapi.io to get the latest rate. To avoid overloading their servers, we only want to call their API once a day.
 
 ```javascript
 // get the GBP / USD rate once a day
@@ -48,30 +53,36 @@ for await(const price of liveRates()) {
 }
 
 // a function that pauses for a set amount of time
-function delay(timeout) { return new Promise(resolve => setTimeout(resolve, timeout)); }
+function delay(timeout) { 
+  return new Promise(resolve => setTimeout(resolve, timeout)); 
+}
 ```
 
 ## Async Iteration
 
-`async function*` is an async generator. The mechanism they use internally is the `AsyncIterator` interface. The following code is how the range function would be written as an `AsyncIterator` instead:
+`async function*` is an async generator. The mechanism they use internally is the `AsyncIterator` interface. Here is how we could write the interval method from RxJS using `AsyncIterator`:
 
 ```javascript
-function range(start, end) {
-  let i = start;
+function interval(milliseconds) {
+  let running = true;
+  let i = 0;
   return {
-    // async iterables have a method called [Symbol.asyncIterator]
     [Symbol.asyncIterator]() {
-      return {
-        // [Symbol.asyncIterator] must return an object with a next method
-        next() {
-          if (i < end) {
-            // return a value and done: false if we're not done
-            return Promise.resolve({ value: i++, done: false });
-          }
-          // return done: true if we're done
-          return Promise.resolve({ done: true });
-        }
-      };
+      return this;
+    },
+    next(value) {
+      return running
+        ? delay(milliseconds)
+            .then(() => ({ value: i++, done: false }))
+        : Promise.resolve({ done: true });
+    },
+    throw(error) {
+      running = false;
+      return Promise.resolve({ done: true });
+    },
+    return(value) {
+      running = false;
+      return Promise.resolve({ done: true });
     }
   };
 }
@@ -83,15 +94,13 @@ As long as a JavaScript object has the following properties it can be used as an
 - `[Symbol.asyncIterator]()` returns an object with a `next()` method
 - next() returns a `Promise`
 - If this is the last value, the `Promise` should resolve to `{ done: true }`
-- Otherwise it should resolve to `{ value: value, done: false }` where value is the next value
+- Otherwise it should resolve to `{ value: value, done: false }` where `value` is the next value
 
 This is somewhat more complicated than the `async function*` syntax but can be used to solve problems that `async function*` can't. For example, it is useful for turning a stream of events into an async iterable.
 
 ## Turning a stream of events into an async iterable
 
-Async iterators make it possible to turn code that requires callbacks to one that has control flow that's easier to follow e.g.
-
-Instead of this syntax:
+Async iterators make it possible to turn code that requires callbacks to one that has control flow that's easier to follow. At Investec, we often have to take streams of data from various input sources, tranform it and send it on to various output sources. The standard mechanism to support reading streams of data is event based, for example to read lines from a file the event based syntax looks something like this:
 
 ```javascript
 lineReader.on("line", line => {
@@ -102,10 +111,10 @@ lineReader.on("close", () => {
 });
 ```
 
-We could use this instead:
+Instead, it's easier to reason about code that is more imperative e.g. using async iterators we could imagine having code like this instead:
 
 ```javascript
-for await (const line of lines) {
+for await (const line of fromLineReader(lineReader)) {
     console.log(line);
 }
 console.log('done');
@@ -116,9 +125,9 @@ It turns out that doing this generically is somewhat complicated because:
 - lineReader could send lines before the `for await` consumes them
 - lineReader may need to pause sending lines so that we don't run out of memory
 - `for await` could run before there are any lines available
-- the async iterator next method could be called directly multiple times without waiting for new lines
+- the async iterator `next` method could be called directly multiple times without waiting for new lines
 
-Borrowing the concept of a `Subject` from RxJS, we could imagine having a class that does the following:
+The [Axax](https://github.com/jamiemccrindle/axax) library has an implementation of `Subject` for async iterators which borrows the concept of a `Subject` from RxJS.  It opens up the possibility of writing something like this:
 
 ```javascript
 function fromLineReader(lineReader) {
@@ -138,13 +147,13 @@ function fromLineReader(lineReader) {
 }
 ```
 
-Note: this does not handle backpressure.
-
-The [Axax](https://github.com/jamiemccrindle/axax) library has an implementation of `Subject` for async iterators.
+Note: this does not handle backpressure i.e. if the lineReader is 
+producing lines faster than the async iterator is being consumed, this
+process could run out of memory.
 
 ## Cancellation and avoiding leaks
 
-Neither promises nor async iterators have a reliable way to cancel them. There is a TC39 proposal for cancellation of asynchronous operations but it is still at stage 1.
+Neither Promises nor async iterators have a reliable way to cancel them. There is a [TC39 proposal for cancellation of asynchronous operations](https://github.com/tc39/proposal-cancellation) but it is still at stage 1.
 
 In the example below, we create an async iterable that gets stuck waiting for an
 upstream async iterable that never ends. Even though we call `return()` on it,
@@ -188,6 +197,9 @@ try {
 console.log('on to the next thing');
 ```
 
+While the `for await` syntax is new, the rest of the control flow behaves
+as you'd expect, especially for the try / catch / finally blocks.
+
 And this is the equivalent control flow using RxJS
 
 ```javascript
@@ -205,6 +217,9 @@ const subscribe = source
     () => console.log("succeeded")
   );
 ```
+
+While this will be familiar to RxJS developers it may be harder for developers
+unfamiliar with the library to reason about.
 
 The other significant difference is in how they perform.
 
@@ -397,3 +412,11 @@ using Babel and TypeScript to transpile the code.
 | reduce    | Native           | 19,129.27 per second |
 
 Interestingly Typescript transpilation results in a 50% slowdown while Babel is quite close to native performance. Babel requires the inclusion of the `regenerator-runtime` from Facebook.
+
+## So did we end up using Async Iterators
+
+Yes! We have used them to build our internal dashboard application. It's built using React, TypeScript, Koa, SocketIO and Immer. Monitors run on the server and publish metric deltas to client browsers to update their status but this is perhaps a topic for another blog entry. It turns out that Async Generators are a great way to write our monitors in a simple readable way.
+
+## tl;dr
+
+Based on our investigation, we have decided to use async iterators when our performance is not CPU bound as they are a good way to keep our code simpler.
