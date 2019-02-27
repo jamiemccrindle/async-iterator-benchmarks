@@ -14,3 +14,4 @@ yarn start
 ```
 
 Ignore the error in the beginning. I had to switch on legacy error handling to avoid stack overflows with the default scheduler in Rx.
+
